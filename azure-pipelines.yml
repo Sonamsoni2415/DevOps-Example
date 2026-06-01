@@ -10,6 +10,14 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+
+- task: SonarCloudPrepare@2
+  inputs:
+    SonarQube: 'sonarqube-pwc'
+    scannerMode: 'CLI'
+    configMode: 'manual'
+    cliProjectKey: 'sonamsoni2415_DevOps-Example' 
+
 - task: Maven@4
   displayName: Build Application
   inputs:
@@ -20,4 +28,7 @@ steps:
     # javaHomeOption: 'JDKVersion'
     # mavenVersionOption: 'Default'
     jdkVersionOption: '1.11'
+    sonarQubeRunAnalysis: true
+
+   
 
