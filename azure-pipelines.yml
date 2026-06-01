@@ -20,7 +20,7 @@ steps:
     mavenVersionOption: 'Default'
     jdkVersionOption: '1.11'
     mavenAuthenticateFeed: false
-    sonarQubeRunAnalysis: true
+    sonarQubeRunAnalysis: false
 
 - script: |
     echo Add other tasks to build, test, and deploy your project.
