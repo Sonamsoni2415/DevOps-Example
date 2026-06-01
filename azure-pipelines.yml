@@ -13,7 +13,8 @@ steps:
 
 - task: SonarCloudPrepare@2
   inputs:
-    SonarQube: 'sonarqube-pwc'
+    SonarCloud: 'sonarqube-pwc'
+    organization: sonamsoni2415
     scannerMode: 'CLI'
     configMode: 'manual'
     cliProjectKey: 'sonamsoni2415_DevOps-Example' 
