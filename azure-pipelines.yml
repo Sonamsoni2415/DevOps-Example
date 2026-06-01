@@ -18,6 +18,9 @@ steps:
     scannerMode: 'CLI'
     configMode: 'manual'
     cliProjectKey: 'sonamsoni2415_DevOps-Example' 
+    extraProperties: |
+      sonar.sources=src/main/java
+      sonar.tests=src/test/java
 
 - task: Maven@4
   displayName: Build Application
@@ -30,6 +33,7 @@ steps:
     # mavenVersionOption: 'Default'
     jdkVersionOption: '1.11'
     sonarQubeRunAnalysis: true
+    
 
    
 
