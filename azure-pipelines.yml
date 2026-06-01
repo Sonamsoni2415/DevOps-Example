@@ -10,7 +10,7 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- task: Maven@3
+- task: Maven@4
   inputs:
     mavenPomFile: 'pom.xml'
     goals: 'clean install'
@@ -20,7 +20,7 @@ steps:
     mavenVersionOption: 'Default'
     jdkVersionOption: '1.11'
     mavenAuthenticateFeed: false
-    sonarQubeRunAnalysis: false
+    sonarQubeRunAnalysis: true
 
 - script: |
     echo Add other tasks to build, test, and deploy your project.
