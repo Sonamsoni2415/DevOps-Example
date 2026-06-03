@@ -1,75 +1,84 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
 trigger:
 - main
 
 pool:
-  vmImage: 'ubuntu-latest'
-
+  vmImage: ubuntu-latest
 
 variables:
-  # Replace with your staging or dynamic test environment URL
-  TARGET_URL: 'https://your-test-application.com' 
-
-steps:
-
-- task: SonarCloudPrepare@2
-  inputs:
-    SonarCloud: 'sonarqube-pwc'
-    organization: sonamsoni2415
-    scannerMode: 'CLI'
-    configMode: 'manual'
-    cliProjectKey: 'sonamsoni2415_DevOps-Example' 
-    extraProperties: |
-      sonar.sources=src/main/java
-      sonar.tests=src/test/java
-
-- task: Maven@4
-  displayName: Build Application
-  inputs:
-    mavenPomFile: 'pom.xml'
-    goals: 'clean package'
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
-    # javaHomeOption: 'JDKVersion'
-    # mavenVersionOption: 'Default'
-    jdkVersionOption: '1.11'
-    sonarQubeRunAnalysis: true
+  TARGET_URL: 'https://your-test-application.com'
 
 stages:
+
+# ==========================
+# Build + SonarQube Analysis
+# ==========================
+- stage: BuildAndScan
+  displayName: 'Build and SAST Scan'
+
+  jobs:
+  - job: Build
+    displayName: 'Build Application'
+
+    steps:
+
+    - task: SonarQubePrepare@7
+      displayName: 'Prepare SonarQube Analysis'
+      inputs:
+        SonarQube: 'sonarqube-service-connection'
+        scannerMode: 'CLI'
+        configMode: 'manual'
+        cliProjectKey: 'DevOps-Example'
+        cliProjectName: 'DevOps-Example'
+        extraProperties: |
+          sonar.sources=src/main/java
+          sonar.tests=src/test/java
+
+    - task: Maven@4
+      displayName: 'Maven Build'
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'clean verify'
+        publishJUnitResults: true
+        testResultsFiles: '**/surefire-reports/TEST-*.xml'
+        jdkVersionOption: '1.11'
+        sonarQubeRunAnalysis: true
+
+    - task: SonarQubePublish@7
+      displayName: 'Publish SonarQube Quality Gate'
+      inputs:
+        pollingTimeoutSec: '300'
+
+# ==========================
+# DAST Scan with ZAP
+# ==========================
 - stage: SecurityScan
   displayName: 'Run DAST Security Scan'
+  dependsOn: BuildAndScan
+
   jobs:
-  - job: ZAP_Scan
-    displayName: 'ZAP Baseline Scan'
+  - job: ZAPScan
+    displayName: 'OWASP ZAP Baseline Scan'
+
     steps:
-    
-    # Step 1: Create a local directory for report storage
-    - script: mkdir -p $(System.DefaultWorkingDirectory)/zap-reports
+
+    - script: |
+        mkdir -p $(System.DefaultWorkingDirectory)/zap-reports
       displayName: 'Create Report Directory'
 
-    # Step 2: Run ZAP container and scan target
-    # -v maps the host directory to the container so ZAP can write the reports out
     - script: |
-        docker run --user root -v $(System.DefaultWorkingDirectory)/zap-reports:/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py \
-          -t $(TARGET_URL) \
-          -r zap_report.html \
-          -x zap_report.xml
+        docker run --user root \
+        -v $(System.DefaultWorkingDirectory)/zap-reports:/zap/wrk:rw \
+        -t zaproxy/zap-stable \
+        zap-baseline.py \
+        -t $(TARGET_URL) \
+        -r zap_report.html \
+        -x zap_report.xml
       displayName: 'Execute ZAP Baseline Scan'
-      continueOnError: true # Prevents pipeline from failing completely if vulnerabilities are found
+      continueOnError: true
 
-    # Step 3: Publish the visual HTML Report to Azure Pipelines Artifacts
     - task: PublishBuildArtifacts@1
       displayName: 'Publish ZAP Reports'
       inputs:
         PathtoPublish: '$(System.DefaultWorkingDirectory)/zap-reports'
         ArtifactName: 'ZAP_Security_Reports'
         publishLocation: 'Container'
-
-    
-
-   
-
