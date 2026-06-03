@@ -74,7 +74,7 @@ stages:
         jdkVersionOption: '1.11'
 
     - script: |
-        curl -X POST \
+        curl -v -X POST \
           "$(DTRACK_URL)/api/v1/bom" \
           -H "X-Api-Key: $(DTRACK_API_KEY)" \
           -F "project=$(DTRACK_PROJECT_UUID)" \
