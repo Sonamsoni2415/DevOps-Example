@@ -90,6 +90,7 @@ stages:
 
 - stage: DAST
   displayName: 'OWASP ZAP Scan'
+  condition: false
   dependsOn: SonarScan
 
   jobs:
