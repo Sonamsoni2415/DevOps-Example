@@ -7,49 +7,84 @@ pool:
 variables:
   TARGET_URL: 'https://google.com'
 
+# ==========================
+# Stage 1 - Build
+# ==========================
 stages:
-- stage: BuildAndScan
+
+- stage: Build
+  displayName: 'Build Application'
+
   jobs:
-  - job: Build
-    displayName: 'Build Application'
+  - job: MavenBuild
 
     steps:
-    - task: SonarCloudPrepare@2
-      inputs:
-        SonarCloud: 'sonarqube-pwc'
-        organization: sonamsoni2415
-        scannerMode: 'CLI'
-        configMode: 'manual'
-        cliProjectKey: 'sonamsoni2415_DevOps-Example'
-        extraProperties: |
-          sonar.sources=src/main/java
-          sonar.tests=src/test/java
-          
+    - checkout: self
+
     - task: Maven@4
-      displayName: Build Application
+      displayName: 'Build Application'
       inputs:
         mavenPomFile: 'pom.xml'
         goals: 'clean package'
         publishJUnitResults: true
         testResultsFiles: '**/surefire-reports/TEST-*.xml'
         jdkVersionOption: '1.11'
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Build Artifact'
+      inputs:
+        targetPath: '$(System.DefaultWorkingDirectory)'
+        artifact: 'source-code'
+
+# ==========================
+# Stage 2 - SonarCloud SAST
+# ==========================
+
+- stage: SonarScan
+  displayName: 'SonarCloud Analysis'
+  dependsOn: Build
+
+  jobs:
+  - job: Sonar
+
+    steps:
+
+    - checkout: self
+
+    - task: SonarCloudPrepare@2
+      inputs:
+        SonarCloud: 'sonarqube-pwc'
+        organization: 'sonamsoni2415'
+        scannerMode: 'CLI'
+        configMode: 'manual'
+        cliProjectKey: 'sonamsoni2415_DevOps-Example'
+        extraProperties: |
+          sonar.sources=src/main/java
+          sonar.tests=src/test/java
+
+    - task: Maven@4
+      displayName: 'Run Sonar Analysis'
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'verify'
+        jdkVersionOption: '1.11'
         sonarQubeRunAnalysis: true
 
-   # - task: SonarCloudPublish@2
-   #   displayName: 'Publish SonarQube Quality Gate'
-    #  inputs:
-     #   pollingTimeoutSec: '300'
+    - task: SonarCloudPublish@2
+      displayName: 'Publish Quality Gate'
+      inputs:
+        pollingTimeoutSec: '300'
 
 # ==========================
-# DAST Scan with ZAP
+# Stage 3 - DAST
 # ==========================
-- stage: SecurityScan
-  displayName: 'Run DAST Security Scan'
-  dependsOn: BuildAndScan
+
+- stage: DAST
+  displayName: 'OWASP ZAP Scan'
+  dependsOn: SonarScan
 
   jobs:
   - job: ZAPScan
-    displayName: 'OWASP ZAP Baseline Scan'
 
     steps:
 
