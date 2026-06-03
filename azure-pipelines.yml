@@ -54,6 +54,7 @@ stages:
         extraProperties: |
           sonar.sources=src/main/java
           sonar.tests=src/test/java
+
 - stage: DependencyTrack
   displayName: 'Dependency Track Scan'
   dependsOn: SonarScan
@@ -80,13 +81,6 @@ stages:
           -F "bom=@target/bom.xml"
       displayName: 'Upload SBOM to Dependency Track'         
 
-    - task: Maven@4
-      displayName: 'Run Sonar Analysis'
-      inputs:
-        mavenPomFile: 'pom.xml'
-        goals: 'verify'
-        jdkVersionOption: '1.11'
-        sonarQubeRunAnalysis: true
 
 - stage: DAST
   displayName: 'OWASP ZAP Scan'
