@@ -5,39 +5,31 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  TARGET_URL: 'https://your-test-application.com'
+  TARGET_URL: 'https://google.com'
 
 stages:
-
-# ==========================
-# Build + SonarQube Analysis
-# ==========================
 - stage: BuildAndScan
-  displayName: 'Build and SAST Scan'
-
   jobs:
   - job: Build
     displayName: 'Build Application'
 
     steps:
-
-    - task: SonarQubePrepare@7
-      displayName: 'Prepare SonarQube Analysis'
+    - task: SonarCloudPrepare@2
       inputs:
-        SonarQube: 'sonarqube-service-connection'
+        SonarCloud: 'sonarqube-pwc'
+        organization: sonamsoni2415
         scannerMode: 'CLI'
         configMode: 'manual'
-        cliProjectKey: 'DevOps-Example'
-        cliProjectName: 'DevOps-Example'
+        cliProjectKey: 'sonamsoni2415_DevOps-Example'
         extraProperties: |
           sonar.sources=src/main/java
           sonar.tests=src/test/java
-
+          
     - task: Maven@4
-      displayName: 'Maven Build'
+      displayName: Build Application
       inputs:
         mavenPomFile: 'pom.xml'
-        goals: 'clean verify'
+        goals: 'clean package'
         publishJUnitResults: true
         testResultsFiles: '**/surefire-reports/TEST-*.xml'
         jdkVersionOption: '1.11'
