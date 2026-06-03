@@ -35,7 +35,7 @@ stages:
         jdkVersionOption: '1.11'
         sonarQubeRunAnalysis: true
 
-    - task: SonarQubePublish@7
+    - task: SonarCloudPublish@2
       displayName: 'Publish SonarQube Quality Gate'
       inputs:
         pollingTimeoutSec: '300'
