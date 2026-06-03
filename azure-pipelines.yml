@@ -57,6 +57,31 @@ stages:
         extraProperties: |
           sonar.sources=src/main/java
           sonar.tests=src/test/java
+ - stage: DependencyTrack
+  displayName: 'Dependency Track Scan'
+  dependsOn: SonarScan
+
+  jobs:
+  - job: DependencyTrackScan
+
+    steps:
+
+    - checkout: self
+
+    - task: Maven@4
+      displayName: 'Generate CycloneDX SBOM'
+      inputs:
+        mavenPomFile: 'pom.xml'
+        goals: 'cyclonedx:makeAggregateBom'
+        jdkVersionOption: '1.11'
+
+    - script: |
+        curl -X POST \
+          "$(DTRACK_URL)/api/v1/bom" \
+          -H "X-Api-Key: $(DTRACK_API_KEY)" \
+          -F "project=$(DTRACK_PROJECT_UUID)" \
+          -F "bom=@target/bom.xml"
+      displayName: 'Upload SBOM to Dependency Track'         
 
     - task: Maven@4
       displayName: 'Run Sonar Analysis'
