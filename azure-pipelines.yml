@@ -73,13 +73,13 @@ stages:
         goals: 'cyclonedx:makeAggregateBom'
         jdkVersionOption: '1.11'
 
-    - script: |
-        curl -v -X POST \
-          "$(DTRACK_URL)/api/v1/bom" \
-          -H "X-Api-Key: $(DTRACK_API_KEY)" \
-          -F "project=$(DTRACK_PROJECT_UUID)" \
-          -F "bom=@target/bom.xml"
-      displayName: 'Upload SBOM to Dependency Track'         
+    - task: upload-bom-dtrack@1
+      inputs:
+        dtrackProjId: '1b62c321-07b5-41b1-872a-656e56b9fe2e'
+        dtrackProjName: 'DevOps_example'
+        dtrackURI: $(DTRACK_URL)
+        bomFilePath: target/bom.xml
+        bomAPIKey: $(DTRACK_API_KEY)       
 
 
 - stage: DAST
