@@ -66,15 +66,6 @@ stages:
         jdkVersionOption: '1.11'
         sonarQubeRunAnalysis: true
 
-    - task: SonarCloudPublish@4
-      displayName: 'Publish Quality Gate'
-      inputs:
-        pollingTimeoutSec: '300'
-
-# ==========================
-# Stage 3 - DAST
-# ==========================
-
 - stage: DAST
   displayName: 'OWASP ZAP Scan'
   dependsOn: SonarScan
