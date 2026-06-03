@@ -9,6 +9,11 @@ trigger:
 pool:
   vmImage: 'ubuntu-latest'
 
+
+variables:
+  # Replace with your staging or dynamic test environment URL
+  TARGET_URL: 'https://your-test-application.com' 
+
 steps:
 
 - task: SonarCloudPrepare@2
@@ -33,6 +38,37 @@ steps:
     # mavenVersionOption: 'Default'
     jdkVersionOption: '1.11'
     sonarQubeRunAnalysis: true
+
+stages:
+- stage: SecurityScan
+  displayName: 'Run DAST Security Scan'
+  jobs:
+  - job: ZAP_Scan
+    displayName: 'ZAP Baseline Scan'
+    steps:
+    
+    # Step 1: Create a local directory for report storage
+    - script: mkdir -p $(System.DefaultWorkingDirectory)/zap-reports
+      displayName: 'Create Report Directory'
+
+    # Step 2: Run ZAP container and scan target
+    # -v maps the host directory to the container so ZAP can write the reports out
+    - script: |
+        docker run --user root -v $(System.DefaultWorkingDirectory)/zap-reports:/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py \
+          -t $(TARGET_URL) \
+          -r zap_report.html \
+          -x zap_report.xml
+      displayName: 'Execute ZAP Baseline Scan'
+      continueOnError: true # Prevents pipeline from failing completely if vulnerabilities are found
+
+    # Step 3: Publish the visual HTML Report to Azure Pipelines Artifacts
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish ZAP Reports'
+      inputs:
+        PathtoPublish: '$(System.DefaultWorkingDirectory)/zap-reports'
+        ArtifactName: 'ZAP_Security_Reports'
+        publishLocation: 'Container'
+
     
 
    
