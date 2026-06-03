@@ -35,10 +35,10 @@ stages:
         jdkVersionOption: '1.11'
         sonarQubeRunAnalysis: true
 
-    - task: SonarCloudPublish@2
-      displayName: 'Publish SonarQube Quality Gate'
-      inputs:
-        pollingTimeoutSec: '300'
+   # - task: SonarCloudPublish@2
+   #   displayName: 'Publish SonarQube Quality Gate'
+    #  inputs:
+     #   pollingTimeoutSec: '300'
 
 # ==========================
 # DAST Scan with ZAP
