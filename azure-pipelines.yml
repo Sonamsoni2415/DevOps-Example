@@ -60,7 +60,7 @@ stages:
         extraProperties: |
           sonar.sources=src/main/java
           sonar.tests=src/test/java
- - stage: DependencyTrack
+- stage: DependencyTrack
   displayName: 'Dependency Track Scan'
   dependsOn: SonarScan
 
