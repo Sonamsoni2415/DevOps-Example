@@ -48,10 +48,9 @@ stages:
   - job: Sonar
 
     steps:
-
     - checkout: self
 
-    - task: SonarCloudPrepare@2
+    - task: SonarCloudPrepare@4
       inputs:
         SonarCloud: 'sonarqube-pwc'
         organization: 'sonamsoni2415'
@@ -70,7 +69,7 @@ stages:
         jdkVersionOption: '1.11'
         sonarQubeRunAnalysis: true
 
-    - task: SonarCloudPublish@2
+    - task: SonarCloudPublish@4
       displayName: 'Publish Quality Gate'
       inputs:
         pollingTimeoutSec: '300'
