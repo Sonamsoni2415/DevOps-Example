@@ -1,5 +1,8 @@
 pool:
   vmImage: ubuntu-latest
+#1b62c321-07b5-41b1-872a-656e56b9fe2e
+#odt_qzWAiEdJ_6kDna92Q1UVvMS55RqXoCMNOrxRoi9mq
+
 
 variables:
   TARGET_URL: 'https://google.com'
