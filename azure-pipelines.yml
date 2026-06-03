@@ -77,9 +77,9 @@ stages:
     - task: upload-bom-dtrack@1
       inputs:
         dtrackProjName: 'DevOps_example'
-        dtrackURI: $(DTRACK_URL)
-        bomFilePath: target/bom.xml
-        dtrackAPIKey: $(DTRACK_API_KEY1)       
+        dtrackURI: '$(DTRACK_URL)'
+        bomFilePath: 'target/bom.xml'
+        dtrackAPIKey: '$(DTRACK_API_KEY1)'       
 
 
 - stage: DAST
