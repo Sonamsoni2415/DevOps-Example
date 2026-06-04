@@ -1,5 +1,7 @@
 trigger: none
 pr: none
+#dckr_pat_0mrNml432hDp1MvT_pBnqVCUXiU
+#docker login -u 9893346605
 pool:
   vmImage: ubuntu-latest
 
