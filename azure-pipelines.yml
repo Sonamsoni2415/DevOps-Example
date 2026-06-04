@@ -78,18 +78,18 @@ stages:
     steps:
     - checkout: self
 
-    - task: Maven@4
-      displayName: 'Generate CycloneDX SBOM'
-      inputs:
-        mavenPomFile: 'pom.xml'
-        goals: 'cyclonedx:makeAggregateBom'
-        jdkVersionOption: '1.11'
+    # - task: Maven@4
+    #   displayName: 'Generate CycloneDX SBOM'
+    #   inputs:
+    #     mavenPomFile: 'pom.xml'
+    #     goals: 'cyclonedx:makeAggregateBom'
+    #     jdkVersionOption: '1.11'
 
-    - script: |
-        echo "Verifying SBOM..."
-        ls -la target/
-        pwd
-      displayName: 'Verify BOM'
+    # - script: |
+    #     echo "Verifying SBOM..."
+    #     ls -la target/
+    #     pwd
+    #   displayName: 'Verify BOM'
 
     #- task: upload-bom-dtrack@1
     #  displayName: 'Upload BOM to Dependency Track'
