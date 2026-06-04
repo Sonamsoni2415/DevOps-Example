@@ -118,6 +118,9 @@ stages:
     - download: current
       artifact: source-code
     - script: |
+        pwd
+        ls -la
+        ls -la target
         ls -la $(Pipeline.Workspace)/source-code/target 
     - task: Docker@2
       displayName: 'Build and Push Docker Image'
@@ -126,6 +129,7 @@ stages:
         repository: '$(imageRepository)'
         dockerfile: '$(dockerfilePath)'
         containerRegistry: '$(dockerRegistryServiceConnection)'
+        buildContext: '$(Build.SourcesDirectory)'
         tags: |
           $(Build.BuildId)
           latest
