@@ -38,6 +38,12 @@ stages:
       inputs:
         targetPath: '$(System.DefaultWorkingDirectory)'
         artifact: 'source-code'
+    - script: |
+        pwd
+        ls -la
+        ls -la target/
+        pwd
+      displayName: 'check target folder'    
 
 - stage: SonarScan
   displayName: 'SonarCloud Analysis'
@@ -96,7 +102,7 @@ stages:
         pwd
         ls -la
         ls -la target/
-        find target -name "*.jar"
+        pwd
       displayName: 'check target folder'
       
 - stage: DockerBuildPush
@@ -114,7 +120,7 @@ stages:
       inputs:
         command: 'buildAndPush'
         repository: '$(imageRepository)'
-        dockerfile: '$(dockerfilePath)'
+        dockerfile: '(Build.SourcesDirectory)/Dockerfile'
         containerRegistry: '$(dockerRegistryServiceConnection)'
         tags: |
           $(Build.BuildId)
