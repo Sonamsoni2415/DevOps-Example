@@ -96,7 +96,7 @@ stages:
         pwd
         ls -la
         ls -la target/
-        pwd
+        find target -name "*.jar"
       displayName: 'check target folder'
       
 - stage: DockerBuildPush
