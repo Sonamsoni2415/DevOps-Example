@@ -92,7 +92,13 @@ stages:
        # dtrackURI: '$(DTRACK_URL)'
         #bomFilePath: 'target/bom.xml'
         #dtrackAPIKey: '$(DTRACK_API_KEY1)'
-
+    - script: |
+        pwd
+        ls -la
+        ls -la target/
+        pwd
+      displayName: 'check target folder'
+      
 - stage: DockerBuildPush
   displayName: 'Docker Build and Push'
   dependsOn: DependencyTrack
