@@ -133,15 +133,16 @@ stages:
         tags: |
           $(Build.BuildId)
           latest
-- ask: SSH@0
-  displayName: 'Test SSH Connection'
-  inputs:
-    sshEndpoint: 'your-ssh-service-connection-name'
-    runOptions: 'commands'
-    commands: |
-      hostname
-      whoami
-      pwd
+    - task: SSH@0
+      displayName: 'Test SSH Connection'
+      inputs:
+        sshEndpoint: 'azure-server'
+        runOptions: 'commands'
+        commands: |
+          hostname
+          whoami
+          pwd
+      
 - stage: DAST
   displayName: 'OWASP ZAP Scan'
   condition: false
