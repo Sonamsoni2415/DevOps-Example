@@ -1,20 +1,29 @@
 trigger: none
 pr: none
-#dckr_pat_0mrNml432hDp1MvT_pBnqVCUXiU
-#docker login -u 9893346605
+
 pool:
   vmImage: ubuntu-latest
 
 variables:
   TARGET_URL: 'https://google.com'
 
+  # Docker Variables
+  dockerRegistryServiceConnection: 'dockerhub-connection'
+  imageRepository: '9893346605/devops-example'
+  dockerfilePath: 'Dockerfile'
+  imageTag: '$(Build.BuildId)'
+
 stages:
 
+# ==================================================
+# BUILD STAGE
+# ==================================================
 - stage: Build
   displayName: 'Build Application'
 
   jobs:
   - job: MavenBuild
+    displayName: 'Maven Build'
 
     steps:
     - checkout: self
@@ -29,11 +38,14 @@ stages:
         jdkVersionOption: '1.11'
 
     - task: PublishPipelineArtifact@1
-      displayName: 'Publish Build Artifact'
+      displayName: 'Publish Source Artifact'
       inputs:
         targetPath: '$(System.DefaultWorkingDirectory)'
         artifact: 'source-code'
 
+# ==================================================
+# SONAR SCAN
+# ==================================================
 - stage: SonarScan
   displayName: 'SonarCloud Analysis'
   dependsOn: Build
@@ -55,6 +67,15 @@ stages:
           sonar.sources=src/main/java
           sonar.tests=src/test/java
 
+    - task: SonarCloudAnalyze@4
+
+    - task: SonarCloudPublish@4
+      inputs:
+        pollingTimeoutSec: '300'
+
+# ==================================================
+# DEPENDENCY TRACK
+# ==================================================
 - stage: DependencyTrack
   displayName: 'Dependency Track Scan'
   dependsOn: SonarScan
@@ -63,7 +84,6 @@ stages:
   - job: DependencyTrackScan
 
     steps:
-
     - checkout: self
 
     - task: Maven@4
@@ -72,22 +92,94 @@ stages:
         mavenPomFile: 'pom.xml'
         goals: 'cyclonedx:makeAggregateBom'
         jdkVersionOption: '1.11'
+
     - script: |
-        ls -l target/
-        cat target/bom.xml
-      displayName: Verify bOM 
+        echo "Verifying SBOM..."
+        ls -la target/
+      displayName: 'Verify BOM'
+
     - task: upload-bom-dtrack@1
+      displayName: 'Upload BOM to Dependency Track'
       inputs:
         dtrackProjName: 'DevOps_example'
         dtrackURI: '$(DTRACK_URL)'
         bomFilePath: 'target/bom.xml'
-        dtrackAPIKey: '$(DTRACK_API_KEY1)'       
+        dtrackAPIKey: '$(DTRACK_API_KEY1)'
 
+# ==================================================
+# DOCKER BUILD
+# ==================================================
+- stage: DockerBuild
+  displayName: 'Docker Build'
+  dependsOn: DependencyTrack
 
+  jobs:
+  - job: BuildDockerImage
+
+    steps:
+    - checkout: self
+
+    - task: Docker@2
+      displayName: 'Build Docker Image'
+      inputs:
+        command: build
+        repository: '$(imageRepository)'
+        dockerfile: '$(dockerfilePath)'
+        tags: |
+          $(imageTag)
+
+    - script: |
+        docker save $(imageRepository):$(imageTag) -o image.tar
+      displayName: 'Save Docker Image'
+
+    - task: PublishPipelineArtifact@1
+      displayName: 'Publish Docker Image Artifact'
+      inputs:
+        targetPath: 'image.tar'
+        artifact: 'docker-image'
+
+# ==================================================
+# DOCKER PUSH
+# ==================================================
+- stage: DockerPush
+  displayName: 'Docker Push'
+  dependsOn: DockerBuild
+
+  jobs:
+  - job: PushDockerImage
+
+    steps:
+
+    - task: DownloadPipelineArtifact@2
+      displayName: 'Download Docker Artifact'
+      inputs:
+        artifactName: 'docker-image'
+        targetPath: '$(Pipeline.Workspace)'
+
+    - script: |
+        docker load -i $(Pipeline.Workspace)/image.tar
+      displayName: 'Load Docker Image'
+
+    - task: Docker@2
+      displayName: 'Docker Login'
+      inputs:
+        command: login
+        containerRegistry: '$(dockerRegistryServiceConnection)'
+
+    - script: |
+        docker tag $(imageRepository):$(imageTag) $(imageRepository):latest
+
+        docker push $(imageRepository):$(imageTag)
+        docker push $(imageRepository):latest
+      displayName: 'Push Docker Image'
+
+# ==================================================
+# DAST (OPTIONAL)
+# ==================================================
 - stage: DAST
   displayName: 'OWASP ZAP Scan'
+  dependsOn: DockerPush
   condition: false
-  dependsOn: SonarScan
 
   jobs:
   - job: ZAPScan
