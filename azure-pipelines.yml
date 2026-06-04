@@ -8,16 +8,13 @@ variables:
   TARGET_URL: 'https://google.com'
 
   # Docker Variables
-  dockerRegistryServiceConnection: 'dockerhub-connection'
+  dockerRegistryServiceConnection: 'docker-registry'
   imageRepository: '9893346605/devops-example'
   dockerfilePath: 'Dockerfile'
   imageTag: '$(Build.BuildId)'
 
 stages:
 
-# ==================================================
-# BUILD STAGE
-# ==================================================
 - stage: Build
   displayName: 'Build Application'
 
@@ -43,9 +40,6 @@ stages:
         targetPath: '$(System.DefaultWorkingDirectory)'
         artifact: 'source-code'
 
-# ==================================================
-# SONAR SCAN
-# ==================================================
 - stage: SonarScan
   displayName: 'SonarCloud Analysis'
   dependsOn: Build
@@ -73,9 +67,6 @@ stages:
       inputs:
         pollingTimeoutSec: '300'
 
-# ==================================================
-# DEPENDENCY TRACK
-# ==================================================
 - stage: DependencyTrack
   displayName: 'Dependency Track Scan'
   dependsOn: SonarScan
@@ -96,19 +87,17 @@ stages:
     - script: |
         echo "Verifying SBOM..."
         ls -la target/
+        pwd
       displayName: 'Verify BOM'
 
-    - task: upload-bom-dtrack@1
-      displayName: 'Upload BOM to Dependency Track'
-      inputs:
-        dtrackProjName: 'DevOps_example'
-        dtrackURI: '$(DTRACK_URL)'
-        bomFilePath: 'target/bom.xml'
-        dtrackAPIKey: '$(DTRACK_API_KEY1)'
+    #- task: upload-bom-dtrack@1
+    #  displayName: 'Upload BOM to Dependency Track'
+     # inputs:
+      #  dtrackProjName: 'DevOps_example'
+       # dtrackURI: '$(DTRACK_URL)'
+        #bomFilePath: 'target/bom.xml'
+        #dtrackAPIKey: '$(DTRACK_API_KEY1)'
 
-# ==================================================
-# DOCKER BUILD
-# ==================================================
 - stage: DockerBuild
   displayName: 'Docker Build'
   dependsOn: DependencyTrack
@@ -138,9 +127,6 @@ stages:
         targetPath: 'image.tar'
         artifact: 'docker-image'
 
-# ==================================================
-# DOCKER PUSH
-# ==================================================
 - stage: DockerPush
   displayName: 'Docker Push'
   dependsOn: DockerBuild
@@ -173,9 +159,6 @@ stages:
         docker push $(imageRepository):latest
       displayName: 'Push Docker Image'
 
-# ==================================================
-# DAST (OPTIONAL)
-# ==================================================
 - stage: DAST
   displayName: 'OWASP ZAP Scan'
   dependsOn: DockerPush
