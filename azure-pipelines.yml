@@ -94,66 +94,26 @@ stages:
         #bomFilePath: 'target/bom.xml'
         #dtrackAPIKey: '$(DTRACK_API_KEY1)'
 
-- stage: DockerBuild
-  displayName: 'Docker Build'
+- stage: DockerBuildPush
+  displayName: 'Docker Build and Push'
   dependsOn: DependencyTrack
 
   jobs:
-  - job: BuildDockerImage
+  - job: DockerBuildPush
 
     steps:
     - checkout: self
 
     - task: Docker@2
-      displayName: 'Build Docker Image'
+      displayName: 'Build and Push Docker Image'
       inputs:
-        command: build
+        command: 'buildAndPush'
         repository: '$(imageRepository)'
         dockerfile: '$(dockerfilePath)'
-        tags: |
-          $(imageTag)
-
-    - script: |
-        docker save $(imageRepository):$(imageTag) -o image.tar
-      displayName: 'Save Docker Image'
-
-    - task: PublishPipelineArtifact@1
-      displayName: 'Publish Docker Image Artifact'
-      inputs:
-        targetPath: 'image.tar'
-        artifact: 'docker-image'
-
-- stage: DockerPush
-  displayName: 'Docker Push'
-  dependsOn: DockerBuild
-
-  jobs:
-  - job: PushDockerImage
-
-    steps:
-
-    - task: DownloadPipelineArtifact@2
-      displayName: 'Download Docker Artifact'
-      inputs:
-        artifactName: 'docker-image'
-        targetPath: '$(Pipeline.Workspace)'
-
-    - script: |
-        docker load -i $(Pipeline.Workspace)/image.tar
-      displayName: 'Load Docker Image'
-
-    - task: Docker@2
-      displayName: 'Docker Login'
-      inputs:
-        command: login
         containerRegistry: '$(dockerRegistryServiceConnection)'
-
-    - script: |
-        docker tag $(imageRepository):$(imageTag) $(imageRepository):latest
-
-        docker push $(imageRepository):$(imageTag)
-        docker push $(imageRepository):latest
-      displayName: 'Push Docker Image'
+        tags: |
+          $(Build.BuildId)
+          latest
 
 - stage: DAST
   displayName: 'OWASP ZAP Scan'
