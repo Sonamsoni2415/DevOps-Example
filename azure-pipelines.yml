@@ -127,9 +127,9 @@ stages:
       inputs:
         command: 'buildAndPush'
         repository: '$(imageRepository)'
-        dockerfile: '$(dockerfilePath)'
+        dockerfile: '$(Pipeline.Workspace)/source-code/Dockerfile'
         containerRegistry: '$(dockerRegistryServiceConnection)'
-        buildContext: '$(Build.SourcesDirectory)'
+        buildContext: '$(Pipeline.Workspace)/source-code'
         tags: |
           $(Build.BuildId)
           latest
